@@ -51,6 +51,10 @@ GET http://localhost:3000/redis
 }
 ```
 
+---
+
+---
+
 ## Banner APIs - Create / Update Banner
 
 Stores a banner message in Redis.
@@ -158,5 +162,7 @@ GET http://localhost:3000/banner/exists
 ```
 
 > Note: Redis returns `1` if the key exists and `0` if it does not exist.
+
+---
 
 ---
