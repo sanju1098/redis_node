@@ -1,4 +1,4 @@
-# Project Name
+# REDIS with Node.js and Mongo DB
 
 An Express API utilizing MongoDB and Redis, orchestrated with Docker Compose.
 
