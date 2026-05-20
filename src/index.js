@@ -1,6 +1,7 @@
 import express from "express";
 import Redis from "ioredis";
 import mongoose from "mongoose";
+import { OTPKeyWithTTL } from "./helpers/optLoginWithTTL.js";
 
 // ================== Express App and Redis Setup ==================
 const app = express();
@@ -24,6 +25,7 @@ app.get("/mongo", async (req, res) => {
   res.json({ mongo: "DB Connected", database: mongoose.connection.name });
 });
 
+// ================== Banner APIs ==================
 app.post("/banner", async (req, res) => {
   const { message } = req.body;
   if (!message) {
@@ -51,6 +53,46 @@ app.get("/banner/exists", async (req, res) => {
   res.json({ success: true, exists: exists }); // Boolean(exists) to convert 0/1 to true/false
 });
 
+// ================== OPT Login with TTL ==================
+app.post("/otp", async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) {
+    return res.status(400).json({ error: "Phone number is required" });
+  }
+  const otpValue = Math.floor(100000 + Math.random() * 900000).toString(); // Generate a random 6-digit OTP
+
+  await redis.set(OTPKeyWithTTL(phone), otpValue, "EX", 30); // Set OTP with a TTL of 10 seconds
+  res.json({
+    success: true,
+    message: "OTP Sent and stored in Redis",
+    otp: otpValue,
+  });
+});
+
+app.post("/otp/verify", async (req, res) => {
+  const { phone, otp } = req.body;
+  if (!phone || !otp) {
+    return res.status(400).json({ error: "Phone number and OTP are required" });
+  }
+  const storedOtp = await redis.get(OTPKeyWithTTL(phone));
+  if (!storedOtp) {
+    return res.status(400).json({ message: "OTP expired or not found" });
+  }
+  if (storedOtp !== otp) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  await redis.del(OTPKeyWithTTL(phone)); // Optionally delete the OTP after successful verification
+  return res.json({ success: true, message: "OTP verified successfully" });
+});
+
+app.get("/otp/:phone/ttl", async (req, res) => {
+  const { phone } = req.params;
+  const ttl = await redis.ttl(OTPKeyWithTTL(phone));
+  res.json({ success: true, ttl });
+});
+
+// ================== Start the Server ==================
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

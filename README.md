@@ -166,3 +166,44 @@ GET http://localhost:3000/banner/exists
 ---
 
 ---
+
+## OTP APIs
+
+```
+TTL - stands for "Time To Live" and is used to set an expiration time for a key in Redis. When you set a TTL for a key, it will automatically be deleted after the specified time has elapsed.
+```
+
+## Generate OTP
+
+```http
+POST /otp
+```
+
+Creates a random 6-digit OTP for the provided phone number and stores it in Redis with a TTL (Time To Live).  
+Used for phone number verification and authentication workflows.
+
+---
+
+## Verify OTP
+
+```http
+POST /otp/verify
+```
+
+Validates the OTP entered by the user against the OTP stored in Redis.  
+If the OTP is correct and not expired, verification succeeds and the OTP is removed from Redis.
+
+---
+
+## Check OTP TTL
+
+```http
+GET /otp/:phone/ttl
+```
+
+Returns the remaining expiration time of the OTP stored in Redis for a specific phone number.  
+Useful for implementing OTP countdown timers on the frontend.
+
+---
+
+---
